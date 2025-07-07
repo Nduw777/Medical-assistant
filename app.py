@@ -26,7 +26,7 @@ llm = ChatOpenAI(
 
 # 3️⃣ Streamlit layout
 st.set_page_config(page_title=" Vincent's Med AI", page_icon="🩺")
-st.title("🩺 Vincent's AI Sample")
+st.title("🩺 Vincent's Medical AI Sample")
 
 st.markdown(
     """
