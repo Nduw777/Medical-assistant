@@ -1,0 +1,5 @@
+# never upload your secret key!
+.env
+# virtual‑env + caches
+venv/
+__pycache__/
