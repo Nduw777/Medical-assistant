@@ -1,5 +1,5 @@
 """
-MedBuddy AI — super‑simple Streamlit front‑end
+Vincent's Med AI — super‑simple Streamlit front‑end
 WARNING: This is educational only; it can be wrong. Always verify with a qualified physician.
 """
 import os
@@ -25,7 +25,7 @@ llm = ChatOpenAI(
 )
 
 # 3️⃣ Streamlit layout
-st.set_page_config(page_title="MedBuddy AI", page_icon="🩺")
+st.set_page_config(page_title=" Vincent's Med AI", page_icon="🩺")
 st.title("🩺 MedBuddy AI (draft)")
 
 st.markdown(
