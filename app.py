@@ -6,9 +6,9 @@ import os
 import streamlit as st
 from dotenv import load_dotenv
 
-# LangChain lets us chat with the model more easily
-from langchain.chat_models import ChatOpenAI
-from langchain.schema import SystemMessage, HumanMessage
+# 👉 Correct LangChain imports (v0.2+)
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import SystemMessage, HumanMessage
 
 # 1️⃣ Load the secret key
 load_dotenv()
@@ -19,13 +19,13 @@ if not openai_key:
 
 # 2️⃣ Create the chat model
 llm = ChatOpenAI(
-    model="gpt-4o",
-    temperature=0.25,
+    model="gpt-4o",      # fast + smart model, adjust if you like
+    temperature=0.25,    # low temp = safer, less creative
     openai_api_key=openai_key,
 )
 
 # 3️⃣ Streamlit layout
-st.set_page_config(page_title="MedBuddy AI", page_icon="🩺")
+st.set_page_config(page_title="MedBuddy AI", page_icon="🩺")
 st.title("🩺 MedBuddy AI (draft)")
 
 st.markdown(
@@ -40,7 +40,11 @@ st.markdown(
 
 # 4️⃣ Get user input
 sample_text = """Hemoglobin A1C: 8.2% (High)\nLDL Cholesterol: 165 mg/dL (High)"""
-lab_text = st.text_area("Paste the lab‑test text here:", placeholder=sample_text, height=150)
+lab_text = st.text_area(
+    "Paste the lab‑test text here:",
+    placeholder=sample_text,
+    height=150,
+)
 
 # 5️⃣ Handle button click
 if st.button("🔍 Explain & Recommend"):
