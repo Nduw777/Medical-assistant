@@ -7,6 +7,9 @@ import io
 import streamlit as st
 from dotenv import load_dotenv
 
+# ➕ NEW: smart retry helper (avoids rate‑limit crashes)
+from tenacity import retry, wait_random_exponential, stop_after_attempt
+
 # 👉 Correct LangChain imports (v0.2+)
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -25,6 +28,12 @@ llm = ChatOpenAI(
     openai_api_key=openai_key,
 )
 
+# 2️⃣½  Wrap the model call with exponential back‑off
+@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
+def safe_llm(messages):
+    """Call the model and auto‑retry on rate‑limit errors."""
+    return llm(messages)
+
 # 3️⃣ Streamlit layout
 st.set_page_config(page_title="Vincent's Med AI", page_icon="🩺")
 st.title("🩺 Vincent's Medical AI Sample")
@@ -39,7 +48,7 @@ st.markdown(
     """
 )
 
-# 4️⃣ File upload (new!)
+# 4️⃣ File upload
 uploaded_file = st.file_uploader(
     "📂 Upload a lab‑result file (TXT or CSV)",
     type=["txt", "csv"],
@@ -47,7 +56,6 @@ uploaded_file = st.file_uploader(
 )
 file_text = ""
 if uploaded_file is not None:
-    # Read the uploaded file
     try:
         bytes_content = uploaded_file.read()
         file_text = bytes_content.decode("utf-8")
@@ -88,11 +96,15 @@ if st.button("🔍 Explain & Recommend"):
 
     with st.spinner("Thinking …"):
         try:
-            response = llm(messages)
+            response = safe_llm(messages)  # 💡 uses automatic retry
             st.success("Here’s my draft explanation:")
             st.write(response.content)
         except Exception as e:
-            st.error(f"😓 Oops, something went wrong: {e}")
+            # Friendly message if the problem is rate‑limit related
+            if "rate limit" in str(e).lower():
+                st.error("⚠️ I hit the request limit. Please wait a bit and try again.")
+            else:
+                st.error(f"😓 Oops, something went wrong: {e}")
 
 # 7️⃣ Footer
-st.sidebar.info("Built with Streamlit, LangChain & GPT‑4o · July 2025")
+st.sidebar.info("Built with Streamlit, LangChain, Tenacity & GPT‑4o · July 2025")
