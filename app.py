@@ -3,6 +3,7 @@ Vincent's Med AI — super‑simple Streamlit front‑end
 WARNING: This is educational only; it can be wrong. Always verify with a qualified physician.
 """
 import os
+import io
 import streamlit as st
 from dotenv import load_dotenv
 
@@ -25,12 +26,12 @@ llm = ChatOpenAI(
 )
 
 # 3️⃣ Streamlit layout
-st.set_page_config(page_title=" Vincent's Med AI", page_icon="🩺")
+st.set_page_config(page_title="Vincent's Med AI", page_icon="🩺")
 st.title("🩺 Vincent's Medical AI Sample")
 
 st.markdown(
     """
-    **Hi, Doctor!** Paste a patient’s lab result below and I’ll explain it in plain language.  
+    **Hi, Doctor!** Paste a patient’s lab result **or upload a file** below and I’ll explain it in plain language.  
     I’ll also list **possible** medicine *classes* and next steps.
 
     > ⚠️ **Remember:** I’m just an AI helper, *not* a real doctor.  
@@ -38,18 +39,38 @@ st.markdown(
     """
 )
 
-# 4️⃣ Get user input
+# 4️⃣ File upload (new!)
+uploaded_file = st.file_uploader(
+    "📂 Upload a lab‑result file (TXT or CSV)",
+    type=["txt", "csv"],
+    help="Supported formats: plain‑text .txt or comma‑separated .csv files.",
+)
+file_text = ""
+if uploaded_file is not None:
+    # Read the uploaded file
+    try:
+        bytes_content = uploaded_file.read()
+        file_text = bytes_content.decode("utf-8")
+    except Exception:
+        st.warning("😕 I couldn't read that file. Please make sure it's plain text or CSV.")
+        file_text = ""
+
+# 5️⃣ Manual text area (kept for flexibility)
 sample_text = """Hemoglobin A1C: 8.2% (High)\nLDL Cholesterol: 165 mg/dL (High)"""
-lab_text = st.text_area(
-    "Paste the lab‑test text here:",
+lab_text_input = st.text_area(
+    "…or paste the lab‑test text here:",
     placeholder=sample_text,
     height=150,
+    value=file_text,  # pre‑fill with uploaded content if any
 )
 
-# 5️⃣ Handle button click
+# Decide which text actually gets sent
+final_text = file_text if file_text.strip() else lab_text_input
+
+# 6️⃣ Handle button click
 if st.button("🔍 Explain & Recommend"):
-    if not lab_text.strip():
-        st.warning("Please paste a lab result before clicking 😊")
+    if not final_text.strip():
+        st.warning("Please upload a file or paste a lab result before clicking 😊")
         st.stop()
 
     messages = [
@@ -62,7 +83,7 @@ if st.button("🔍 Explain & Recommend"):
                 "Always tell the reader to confirm with a licensed doctor."
             )
         ),
-        HumanMessage(content=f"Here is the lab result:\n{lab_text}\n\nExplain and recommend."),
+        HumanMessage(content=f"Here is the lab result:\n{final_text}\n\nExplain and recommend."),
     ]
 
     with st.spinner("Thinking …"):
@@ -73,5 +94,5 @@ if st.button("🔍 Explain & Recommend"):
         except Exception as e:
             st.error(f"😓 Oops, something went wrong: {e}")
 
-# 6️⃣ Footer
+# 7️⃣ Footer
 st.sidebar.info("Built with Streamlit, LangChain & GPT‑4o · July 2025")
